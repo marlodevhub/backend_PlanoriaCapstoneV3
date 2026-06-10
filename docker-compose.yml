@@ -1,41 +1,36 @@
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64 # 👈 Fix para evitar incompatibilidad de procesador (ARM64 vs amd64)
     container_name: planoria-sqlserver
-
     environment:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "Planoria123*"
-
     ports:
       - "1433:1433"
-
     volumes:
-      - sqlserver_data:/var/opt/mssql
-
+      - sqlserver-data:/var/opt/mssql
     networks:
       - planoria-network
 
   backend:
     build: .
-
     container_name: planoria-backend
-
     ports:
       - "7075:8080"
-
     depends_on:
       - sqlserver
-
     environment:
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Planoria_Database;User Id=sa;Password=Planoria123*;TrustServerCertificate=True;"
-      GEMINI_API_KEY: "${GEMINI_API_KEY}"
-
+      Gemini__ApiKey: "${GEMINI_API_KEY}"
+      Jwt__Key: "${JWT_KEY}"
+      Authentication__Google__ClientId: "${GOOGLE_CLIENT_ID}"
+      Authentication__Google__ClientSecret: "${GOOGLE_CLIENT_SECRET}"
     networks:
       - planoria-network
 
+volumes:
+  sqlserver-data:
+
 networks:
   planoria-network:
-
-volumes:
-  sqlserver_data:
