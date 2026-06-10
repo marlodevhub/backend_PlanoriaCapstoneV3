@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authentication.JwtBearer; // 👈 IMPORTANTE: Asegúrate de tener esta línea
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using PlanoriaCapstone.Bll.Interface;
 using PlanoriaCapstone.Bll.Service;
 using PlanoriaCapstone.Dal;
@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// DATABASE
+// DATABASE & DIRECTORIES
 builder.Environment.WebRootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
 Directory.CreateDirectory(builder.Environment.WebRootPath);
 
@@ -97,7 +97,12 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// JWT
+// 🔐 JWT CONF & FALLBACKS (Para que no rompa en Docker si lee variables planas)
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Jwt:Key no está configurado.");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "PlanoriaAPI";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "PlanoriaApp";
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -107,9 +112,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
@@ -126,7 +131,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// AUTO-MIGRATE (with retry for SQL Server startup)
+// 🚀 AUTO-MIGRATE WITH RETRY
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -149,7 +154,8 @@ using (var scope = app.Services.CreateScope())
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Planoria API v1"));
 
-if (app.Environment.IsDevelopment())
+// Control estricto de redirección en Producción/Docker
+if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }

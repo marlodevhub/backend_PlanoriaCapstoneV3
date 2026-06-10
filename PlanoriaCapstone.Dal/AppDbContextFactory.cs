@@ -4,33 +4,27 @@ using Microsoft.Extensions.Configuration;
 
 namespace PlanoriaCapstone.Dal
 {
-    public class AppDbContextFactory
-        : IDesignTimeDbContextFactory<AppDbContext>
+    public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
     {
-        public AppDbContext CreateDbContext(
-            string[] args)
+        public AppDbContext CreateDbContext(string[] args)
         {
-            var optionsBuilder =
-                new DbContextOptionsBuilder<AppDbContext>();
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+                ?? "Production";
 
-            // LEER appsettings.json
-            IConfigurationRoot configuration =
-                new ConfigurationBuilder()
-                .SetBasePath(
-                    Directory.GetCurrentDirectory())
-                .AddJsonFile(
-                    "appsettings.json")
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile($"appsettings.{environment}.json", optional: true)
+                .AddEnvironmentVariables()
                 .Build();
 
-            var connectionString =
-                configuration.GetConnectionString(
-                    "DefaultConnection");
+            var connectionString = configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("ConnectionString no configurado.");
 
-            optionsBuilder.UseSqlServer(
-                connectionString);
+            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            optionsBuilder.UseSqlServer(connectionString);
 
-            return new AppDbContext(
-                optionsBuilder.Options);
+            return new AppDbContext(optionsBuilder.Options);
         }
     }
 }

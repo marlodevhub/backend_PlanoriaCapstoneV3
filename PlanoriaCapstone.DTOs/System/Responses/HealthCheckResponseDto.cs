@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PlanoriaCapstone.DTOs.System.Responses
+﻿namespace PlanoriaCapstone.DTOs.System.Responses
 {
     public class HealthCheckResponseDto
     {

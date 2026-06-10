@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PlanoriaCapstone.DTOs.Reports.Responses
+﻿namespace PlanoriaCapstone.DTOs.Reports.Responses
 {
     public class StudyTimeByCourse
     {

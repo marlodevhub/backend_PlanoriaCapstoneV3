@@ -1,32 +1,4 @@
 services:
-  sqlserver-dev:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: planoria-sqlserver-dev
-    platform: linux/amd64
-    environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "${SA_PASSWORD}"
-    ports:
-      - "1433:1433"
-    volumes:
-      - sqlserver-dev-data:/var/opt/mssql
-    networks:
-      - planoria-network
-
-  sqlserver-staging:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: planoria-sqlserver-staging
-    platform: linux/amd64
-    environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "${SA_PASSWORD}"
-    ports:
-      - "1434:1433"
-    volumes:
-      - sqlserver-staging-data:/var/opt/mssql
-    networks:
-      - planoria-network
-
   sqlserver-prod:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: planoria-sqlserver-prod
@@ -54,13 +26,11 @@ services:
       - Authentication__Google__ClientSecret=${GOOGLE_CLIENT_SECRET}
       - ConnectionStrings__DefaultConnection=Server=${DB_HOST};Database=${DB_NAME};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;
     depends_on:
-      - ${DB_SERVICE:-sqlserver-dev}
+      - sqlserver-prod
     networks:
       - planoria-network
 
 volumes:
-  sqlserver-dev-data:
-  sqlserver-staging-data:
   sqlserver-prod-data:
 
 networks:
