@@ -1,0 +1,41 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: planoria-sqlserver
+
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Planoria123*"
+
+    ports:
+      - "1433:1433"
+
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+    networks:
+      - planoria-network
+
+  backend:
+    build: .
+
+    container_name: planoria-backend
+
+    ports:
+      - "7075:8080"
+
+    depends_on:
+      - sqlserver
+
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Planoria_Database;User Id=sa;Password=Planoria123*;TrustServerCertificate=True;"
+      GEMINI_API_KEY: "${GEMINI_API_KEY}"
+
+    networks:
+      - planoria-network
+
+networks:
+  planoria-network:
+
+volumes:
+  sqlserver_data:
